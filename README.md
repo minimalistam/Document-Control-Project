@@ -4,7 +4,7 @@ to extract document status report from project document register
 Below is Result for the uploaded document register :
 
 
-There are  24  overdue documents as of today( 2022-12-29 ) aas listed below:
+There are  24  overdue documents as of today( 2022-12-29 ) as listed below:
 
 
 1 - MDR - Transformer (  45954-E-51010-MDR-G-00003  )
