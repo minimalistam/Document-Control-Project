@@ -47,7 +47,7 @@ def overdue(reg):
 
     print("")
     print("")
-    print("There are: ", len(overduefinal), " overdue documents as of today(" , today, ") aas listed below: ")
+    print("There are ", len(overduefinal), " overdue documents as of today(" , today, ") aas listed below: ")
     print("")
     print("")
 
