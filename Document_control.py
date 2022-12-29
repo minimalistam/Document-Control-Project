@@ -103,3 +103,5 @@ def report(reg):
     outstanding(reg)
 
 report(reg)
+
+print("")
