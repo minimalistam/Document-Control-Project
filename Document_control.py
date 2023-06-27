@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import pyaudio
 
 # Load data
 reg = pd.read_excel("Document_register.xlsx")
