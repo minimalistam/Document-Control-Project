@@ -1,104 +1,87 @@
+# it is going to be the edited version 1
 import numpy as np
 import pandas as pd
-import datetime
-from datetime import date
+from datetime import datetime
 
+# Load data
 reg = pd.read_excel("Document_register.xlsx")
+
+# Use second row as column names
 reg.columns = reg.iloc[1]
 
-Clough_Status = reg["Document Status"]
-for i in Clough_Status.index:
-    if (Clough_Status[i]== "canceled"):
-        reg = reg.drop(i)
+# Drop documents with status "canceled"
+reg = reg[reg["Document Status"] != "canceled"]
 
-today = np.datetime64("today" , "D")
+# Get current date
+today = datetime.now()
 
 def outlist(reg):
+    """
+    Filters the register for documents that need to be processed and
+    sorts by submission date.
+    """
 
-    TM_History = reg["TM History TM(Rev)"]
-    TM_History = TM_History.fillna("")
+    # Drop documents that have a TM history
+    reg = reg[reg["TM History TM(Rev)"].isna()]
 
-    for x in TM_History.index:
-        if (TM_History[x] != ""):
-            reg = reg.drop(x)
+    # Clean up data and sort
+    reg = reg.drop(0)
+    reg = reg.dropna(subset = ["Clough Doc No"])
+    reg["Forecast Submission Date2"] = pd.to_datetime(reg["Forecast Submission Date2"], errors="coerce")
+    reg = reg.sort_values(by = "Forecast Submission Date2")
 
-    regC = reg.drop(0)
-    regC = regC.dropna(subset = ["Clough Doc No"])
-    regC["Forecast Submission Date2"] = pd.to_datetime(regC["Forecast Submission Date2"] , errors="coerce")
-    regC = regC.sort_values(by = "Forecast Submission Date2")
-
-    return regC
-    print(regC["Forecast Submission Date2"])
+    return reg
 
 def overdue(reg):
+    """
+    Prints a list of documents that are overdue.
+    """
 
     reg = outlist(reg)
 
-    due_date = (reg["Forecast Submission Date2"])
+    due_date = reg["Forecast Submission Date2"]
     due_date = due_date.dropna()
-    overdue=(due_date - today)
-    overdue = overdue.astype("timedelta64[D]").astype(int)
 
-    overduefinal = []
+    # Calculate days overdue
+    overdue = (due_date - today).dt.days
 
-    for j in overdue.index:
-        if int(overdue[j])< 0:
-            overduefinal.append(j)
+    overduefinal = overdue[overdue < 0]
 
-    print("")
-    print("")
-    print("There are ", len(overduefinal), " overdue documents as of today(" , today, ") as listed below: ")
-    print("")
-    print("")
+    print(f"\n\nThere are {len(overduefinal)} overdue documents as of today ({today.date()}) as listed below:\n\n")
 
-    k=1
-    for j in overduefinal:
-
-        print(k, "-" , reg.Title[j], "( ", reg["Clough Doc No"][j]," )")
-        print(overdue[j], " days overdue (" , due_date[j].date(), ")")
-        print("")
-        k +=1
+    for i, days in overduefinal.iteritems():
+        print(f"{i+1} - {reg.loc[i, 'Title']} ({reg.loc[i, 'Clough Doc No']})\n{days} days overdue ({due_date[i].date()})\n")
 
 def outstanding(reg):
+    """
+    Prints a list of documents that are outstanding.
+    """
+
     reg = outlist(reg)
 
-    print("")
-    print("")
-    print(" and there are ", reg.shape[0], "outstanding documents as listed below: ")
-    print("")
-    print("")
-    
-    k=1
-    for x in reg.index:
-        due_date = (reg["Forecast Submission Date2"][x])
+    print(f"\n\nAnd there are {reg.shape[0]} outstanding documents as listed below:\n\n")
+
+    for i, row in reg.iterrows():
+        due_date = row["Forecast Submission Date2"]
         od = (due_date - today).days
-        
-        if od >0 :
-            
-            
-            print(k, "-" , reg["Title"][x], "(" , reg["Clough Doc No"][x], ") Due in " , od , "days") 
-            print("") 
-            
-        elif od<0:
-            print(k, "-" , reg["Title"][x], "(" , reg["Clough Doc No"][x], ") overdue " , -(od) , "days") 
-            print("")
-            
-        
-       
-            
-    k+=1
+
+        if od > 0:
+            print(f"{i+1} - {row['Title']} ({row['Clough Doc No']}) Due in {od} days\n")
+        else:
+            print(f"{i+1} - {row['Title']} ({row['Clough Doc No']}) overdue {-od} days\n")
 
 def report(reg):
+    """
+    Prints a report of the submission status of documents.
+    """
 
     regout = outlist(reg)
 
-    due_date = (reg["Forecast Submission Date2"])
-    due_date = due_date.dropna()
+    # Count submitted documents
+    submitted = reg["Forecast Submission Date2"].count() - regout.shape[0]
 
-    submitted = due_date.shape[0] - regout.shape[0]
+    print(f"We have submitted {submitted} out of {reg['Forecast Submission Date2'].count()} documents in contract and:\n")
 
-    print(" We have Submitted " , submitted, "out of " , due_date.shape[0], "documents in contract and: ")
-    
     overdue(reg)
     outstanding(reg)
 
